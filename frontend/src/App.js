@@ -9,6 +9,9 @@ import OrderDetails from './components/OrderDetails';
 import Signin from './components/Signin';
 import Signup from './components/Signup';
 import Footer from './components/Footer';
+import SideDrawer from './components/SideDrawer';
+import UserOrders from './components/UserOrders';
+import SliderPage from './components/SliderPage';
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
           <Route exact path="/orderdetails" element={<OrderDetails />} />
           <Route exact path="/signin" element={<Signin />} />
           <Route exact path="/signup" element={<Signup />} />
+          <Route exact path="/sideDrawer" element={<SideDrawer />} />
+          <Route exact path="/userorders" element={<UserOrders />} />
+          <Route exact path="/sliderPage" element={<SliderPage />} />
         </Routes>
         <Footer />
       </Router>

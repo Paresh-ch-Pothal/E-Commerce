@@ -1,4 +1,5 @@
 import React from 'react'
+import SliderPage from './SliderPage';
 
 const Home = () => {
     return (
@@ -68,6 +69,10 @@ const Home = () => {
                     <button className="flex mx-auto mt-16 text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Button</button>
                 </div>
             </section>
+
+            <div className='swipper ' style={{backgroundColor: "#101011",paddingBottom: "20px"}}>
+            <SliderPage/>
+            </div>
         </div>
     )
 }

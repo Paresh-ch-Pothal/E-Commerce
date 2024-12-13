@@ -1,10 +1,26 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaUser } from "react-icons/fa";
 import Avatar from '@mui/material/Avatar'
 import { green } from '@mui/material/colors';
+import { Menu, MenuItem } from '@mui/material';
+import SideDrawer from './SideDrawer';
+
 
 const Navbar = () => {
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const navigate=useNavigate()
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    const handleMyOrders=()=>{
+        navigate('/userorders');
+    }
+
     return (
         <div>
             <header className="text-gray-400 body-font" style={{ backgroundColor: "black" }}>
@@ -22,10 +38,27 @@ const Navbar = () => {
                         <Link className="ml-3 text-xl xl:block lg:hidden" to='/'>Tailblocks</Link>
                     </a>
                     <div className="lg:w-2/5 inline-flex lg:justify-end ml-5 lg:ml-0">
-                        <Avatar className='mx-3 cursor-pointer' sx={{ bgcolor: green[500] }} src="/broken-image.jpg">
+                        <Avatar className='mx-1 cursor-pointer' sx={{ bgcolor: green[500] }} src="/broken-image.jpg" aria-controls={open ? 'basic-menu' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={open ? 'true' : undefined}
+                            onClick={handleClick}>
                         </Avatar>
-                        <Link className="inline-flex items-center bg-green-400 border-0 py-1 px-3 focus:outline-none hover:bg-red-500 rounded text-base mt-4 md:mt-0 text-black" to='/signin'>Signin
 
+                        <Menu
+                            id="basic-menu"
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            MenuListProps={{
+                                'aria-labelledby': 'basic-button',
+                            }}
+                        >
+                            <MenuItem >Profile</MenuItem>
+                            <MenuItem onClick={handleMyOrders}>My Orders</MenuItem>
+                            <MenuItem >Logout</MenuItem>
+                        </Menu>
+                        <SideDrawer />
+                        <Link className="inline-flex items-center bg-green-400 border-0 py-1 px-3 focus:outline-none hover:bg-red-500 rounded text-base mt-4 md:mt-0 text-black" to='/signin'>Signin
                         </Link>
                     </div>
                 </div>
