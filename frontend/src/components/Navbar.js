@@ -20,6 +20,10 @@ const Navbar = () => {
     const handleMyOrders=()=>{
         navigate('/userorders');
     }
+    const handleLogout=()=>{
+        localStorage.removeItem("token");
+        navigate("/signin")
+    }
 
     return (
         <div>
@@ -55,11 +59,13 @@ const Navbar = () => {
                         >
                             <MenuItem >Profile</MenuItem>
                             <MenuItem onClick={handleMyOrders}>My Orders</MenuItem>
-                            <MenuItem >Logout</MenuItem>
+                            {localStorage.getItem("token") && 
+                            <MenuItem onClick={handleLogout}>Logout</MenuItem>}
                         </Menu>
                         <SideDrawer />
+                        {!localStorage.getItem("token") && 
                         <Link className="inline-flex items-center bg-green-400 border-0 py-1 px-3 focus:outline-none hover:bg-red-500 rounded text-base mt-4 md:mt-0 text-black" to='/signin'>Signin
-                        </Link>
+                        </Link> }
                     </div>
                 </div>
             </header>

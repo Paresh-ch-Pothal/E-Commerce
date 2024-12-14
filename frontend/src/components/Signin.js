@@ -1,7 +1,34 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 const Signin = () => {
+    const host = "http://localhost:5000";
+    const [info, setinfo] = useState({
+        email: "", password: ""
+    })
+    let navigate = useNavigate();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const response = await fetch(`${host}/api/user/signin`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email: info.email, password: info.password })
+        });
+        const json = await response.json();
+        console.log(json)
+        if (json.success) {
+            localStorage.setItem("token", json.authtoken);
+            navigate("/");
+        }
+        else {
+        }
+    }
+
+    const onChange = (e) => {
+        setinfo({ ...info, [e.target.name]: e.target.value })
+    }
     return (
         <div>
             <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8" style={{ backgroundColor: "#101011", color: "white" }}>
@@ -13,7 +40,7 @@ const Signin = () => {
                 </div>
 
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                    <form action="#" method="POST" className="space-y-6">
+                    <form onSubmit={handleSubmit} action="#" method="POST" className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-sm/6 font-medium ">
                                 Email address
@@ -25,6 +52,8 @@ const Signin = () => {
                                     type="email"
                                     required
                                     autoComplete="email"
+                                    value={info.email}
+                                    onChange={onChange}
                                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                 />
                             </div>
@@ -42,6 +71,8 @@ const Signin = () => {
                                     name="password"
                                     type="password"
                                     required
+                                    value={info.password}
+                                    onChange={onChange}
                                     autoComplete="current-password"
                                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                 />

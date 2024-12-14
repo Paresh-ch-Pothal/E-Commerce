@@ -1,6 +1,36 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+    const host = "http://localhost:5000";
+    const [info, setinfo] = useState({
+        name: "", email: "", password: "", cpassword: ""
+    })
+    let navigate = useNavigate();
+
+    const handleSubmitSignup = async (e) => {
+        e.preventDefault();
+        const { name, email, password } = info;
+        const response = await fetch(`${host}/api/user/signup`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ name: info.name, email: info.email, password: info.password })
+        })
+        const json = await response.json();
+        console.log(json);
+        if (json.success) {
+            navigate("/");
+            localStorage.setItem("token", json.authtoken);
+        }
+        else {
+        }
+    }
+
+    const OnChange = (e) => {
+        setinfo({ ...info, [e.target.name]: e.target.value })
+    }
     return (
         <div>
             <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8" style={{backgroundColor: "#101011",color: "white"}}>
@@ -11,7 +41,7 @@ const Signup = () => {
                 </div>
 
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                    <form action="#" method="POST" className="space-y-6">
+                    <form onSubmit={handleSubmitSignup} action="#" method="POST" className="space-y-6">
 
 
                     <div>
@@ -21,9 +51,10 @@ const Signup = () => {
                             <div className="mt-2">
                                 <input
                                     id="name"
-                                    name="nmae"
+                                    name="name"
                                     type="text"
                                     required
+                                    onChange={OnChange}
                                     autoComplete="name"
                                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                 />
@@ -40,6 +71,7 @@ const Signup = () => {
                                     name="email"
                                     type="email"
                                     required
+                                    onChange={OnChange}
                                     autoComplete="email"
                                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                 />
@@ -58,6 +90,7 @@ const Signup = () => {
                                     name="password"
                                     type="password"
                                     required
+                                    onChange={OnChange}
                                     autoComplete="current-password"
                                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                 />
