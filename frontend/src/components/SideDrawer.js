@@ -12,6 +12,7 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Avatar } from '@mui/material';
+import StoreIcon from '@mui/icons-material/Store';
 
 
 const SideDrawer = () => {
@@ -22,7 +23,7 @@ const SideDrawer = () => {
     };
 
     const DrawerList = (
-        <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
+        <Box sx={{ width: 250}} role="presentation" onClick={toggleDrawer(false)}>
             <List>
                 {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
                     <ListItem key={text} disablePadding>
@@ -51,12 +52,13 @@ const SideDrawer = () => {
         </Box>
     );
     return (
-        <div>
+        <div style={{backgroundColor: "black"}}>
             <Avatar style={{ backgroundColor: '#3d4a8a', color: 'white' }} className='mx-2 cursor-pointer' onClick={toggleDrawer(true)}>
                 <ShoppingCartIcon />
             </Avatar>
             <Drawer open={open} onClose={toggleDrawer(false)}>
                 {DrawerList}
+                <Button variant="outlined">Buy Now <StoreIcon fontSize='small' style={{ marginLeft: "3px" }} /></Button>
             </Drawer>
         </div>
     )
