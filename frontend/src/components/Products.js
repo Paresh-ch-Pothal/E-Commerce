@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -6,6 +7,7 @@ import Select from '@mui/material/Select';
 import { Button } from '@mui/material';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import StoreIcon from '@mui/icons-material/Store';
+import Item from './Item';
 
 const Products = () => {
     const [category, setcategory] = useState('Tshirt');
@@ -31,9 +33,44 @@ const Products = () => {
         }
     }
 
+    const navigate = useNavigate()
+
+    const handleViewImage = async (id) => {
+        try {
+            localStorage.setItem("itemId",id)
+            navigate("/item");
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     useEffect(() => {
         populateItems();
     }, [category])
+
+    const token=localStorage.getItem("token");
+
+    const handleAddToCart=async(id)=>{
+        try {
+            const response=await fetch(`http://localhost:5000/api/cart/addElementToCart`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token' : token
+                },
+                body: JSON.stringify({
+                    itemId: id, 
+                    quantity: 1 
+                })
+            })
+            const data=await response.json()
+            console.log(data);
+        } catch (error) {
+            
+        }
+    }
+
+    
 
     return (
         <div>
@@ -60,9 +97,9 @@ const Products = () => {
                         {items.length === 0 ? (<div>No items are present</div>) : (
                             items.map((item) => {
                                 return (
-                                    <div key={item._id} className="lg:w-1/4 md:w-1/2 p-4 w-full" style={{border: "1px solid #2a2a2a",borderRadius: "10px"}}>
+                                    <div key={item._id} className="lg:w-1/4 md:w-1/2 p-4 w-full" style={{ border: "1px solid #2a2a2a", borderRadius: "10px" }}>
                                         <a className="block relative h-48 rounded overflow-hidden">
-                                            <img alt="ecommerce" className="object-cover object-center w-full h-full block" src="https://dummyimage.com/420x260" />
+                                            <img alt="ecommerce" className="object-cover object-center w-full h-full block cursor-pointer" onClick={() => { handleViewImage(item._id) }} style={{ margin: "auto" }} src={item.pic} />
                                         </a>
                                         <div className="mt-4">
                                             <h3 className="text-gray-500 text-xs tracking-widest title-font mb-1">{item.category}</h3>
@@ -72,8 +109,8 @@ const Products = () => {
                                             <p className="mt-1">Discount: {item.discount}%</p>
                                         </div>
                                         <div className='mt-2 flex gap-2'>
-                                        <Button variant="outlined">Add To Cart <ShoppingBagIcon fontSize='small' style={{marginLeft: "3px"}}/></Button>
-                                        <Button variant="outlined">Buy Now <StoreIcon fontSize='small' style={{marginLeft: "3px"}}/></Button>
+                                            <Button variant="outlined" onClick={()=>{handleAddToCart(item._id)}}>Add To Cart <ShoppingBagIcon fontSize='small' style={{ marginLeft: "3px" }} /></Button>
+                                            <Button variant="outlined">Buy Now <StoreIcon fontSize='small' style={{ marginLeft: "3px" }} /></Button>
                                         </div>
                                     </div>
                                 )

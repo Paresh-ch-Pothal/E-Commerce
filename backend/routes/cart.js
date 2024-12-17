@@ -1,60 +1,72 @@
-const express=require("express");
+const express = require("express");
 const fetchuser = require("../middleware/fetchuser");
 const Cart = require("../models/cart");
 const Item = require("../models/item");
-const router=express.Router()
+const router = express.Router()
 
-// initialize a cart
-router.post("/cartIntialize",fetchuser,async(req,res)=>{
-    try {
-        const InitiateCart=await Cart.create({
-            userId: req.user._id,
-            items:[],
-            totalItems:0,
-            totalPrice:0
-        })
-        return res.status(200).json({success: true,InitiateCart});
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({success: false,message: "Some internal issue is there"});
-    }
-})
+router.post("/addElementToCart", fetchuser, async (req, res) => {
+    const { itemId, quantity } = req.body;
 
-// adding elements to the cart
-router.post("/addElementToCart",fetchuser,async(req,res)=>{
-    const {itemId,quantity}=req.body;
     try {
-        const cartItem=await Item.findById(itemId);
-        if (quantity > cartItem.stock){
-            return res.status(400).json({success: false,message: "Quantity is higher than the stock"})
+        // Validate if the item exists and check stock availability
+        const cartItem = await Item.findById(itemId);
+        if (!cartItem) {
+            return res.status(404).json({ success: false, message: "Item not found" });
         }
-        const userId=req.user._id
-        const cart = await Cart.findOne({ userId: userId });
-        if(!cart){
-            return res.status(400).json({success: false,message: "No Cart is present"});
+        if (quantity > cartItem.stock) {
+            return res.status(400).json({ success: false, message: "Quantity exceeds available stock" });
         }
-        const itemIndex=cart.items.findIndex((item)=>item.itemId.toString() === itemId);
-        if(itemIndex > -1){
-            cart.items[itemIndex].quantity+=Number(quantity)
+
+        // Fetch the user's cart or create one if it doesn't exist
+        const userId = req.user._id;
+        let cart = await Cart.findOne({ userId });
+        if (!cart) {
+            cart = await Cart.create({
+                userId: userId,
+                items: [],
+                totalItems: 0,
+                totalPrice: 0
+            });
         }
-        else{
-            cart.items.push({itemId,quantity: Number(quantity)});
+
+        // Check if the item is already in the cart
+        const itemIndex = cart.items.findIndex((item) => item.itemId.toString() === itemId);
+
+        if (itemIndex > -1) {
+            // Update quantity if item exists in cart
+            cart.items[itemIndex].quantity += Number(quantity);
+        } else {
+            // Add new item to cart
+            cart.items.push({ itemId, quantity: Number(quantity) });
         }
-        let price=0
-        let item=0
-        await cart.populate("items.itemId");
-        cart.items.forEach(ele => {
-            item=item+ele.quantity;
-            price=price+(ele.itemId.price * ele.quantity);
-        });
-        cart.totalItems=item
-        cart.totalPrice=price
+
+        // Recalculate total price and total items
+        await cart.populate("items.itemId"); // Populate item details
+        cart.totalItems = cart.items.reduce((sum, ele) => sum + ele.quantity, 0);
+        cart.totalPrice = cart.items.reduce((sum, ele) => sum + ele.itemId.price * ele.quantity, 0);
+
+        // Save the updated cart
         await cart.save();
-        return res.status(200).json({success: true,cart})
+
+        return res.status(200).json({ success: true, cart });
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({success: false,message: "Some internal issue is there"});
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Some internal issue occurred" });
+    }
+});
+
+// populating the items of a particular cart
+router.get("/populateCartItems",fetchuser,async(req,res)=>{
+    try {
+        const userId=req.user._id
+        const cart = await Cart.findOne({ userId: userId }).populate({
+            path: "items.itemId",
+            select: "name price pic discount"
+        });
+        return res.status(200).json({success: true,cart});
+    } catch (error) {
+        
     }
 })
 
-module.exports=router
+module.exports = router
