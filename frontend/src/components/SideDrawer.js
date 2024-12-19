@@ -51,6 +51,7 @@ const SideDrawer = () => {
     const [cart, setcart] = useState([])
     const [cartItem, setcartItem] = useState([])
     const token = localStorage.getItem("token")
+    const [change,setchange]=useState(false)
 
     const populateCart = async () => {
         try {
@@ -73,7 +74,7 @@ const SideDrawer = () => {
 
     useEffect(() => {
         populateCart()
-    }, [])
+    }, [token,change])
 
     const deleteItemFromCart = async (id) => {
         try {
@@ -85,20 +86,55 @@ const SideDrawer = () => {
                 },
             })
             const data = await response.json();
+            setchange(!change)
             // window.location.reload();
         } catch (error) {
 
         }
     }
 
-    const navigate=useNavigate();
+    const navigate = useNavigate();
 
     const handleViewImage = async (id) => {
         try {
-            localStorage.setItem("itemId",id)
+            localStorage.setItem("itemId", id)
             navigate("/item");
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    const handleDecreaseQuantity = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/cart/decreaseQuantity/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+            })
+            const data = await response.json();
+            setchange(!change)
+            console.log(data)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const handleIncreaseQuantity = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/cart/increaseQuantity/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+            })
+            const data = await response.json();
+            setchange(!change)
+            console.log(data)
+        } catch (error) {
+            console.log(error)
         }
     }
 
@@ -115,7 +151,7 @@ const SideDrawer = () => {
                         return (
                             <Box key={item._id} component="section" sx={{ p: 1, border: '1px dashed grey', backgroundColor: "#78787c", width: "30vw", height: "14vh", display: "flex", gap: "2px", m: "3px" }}>
                                 <Box sx={{ width: "30%", border: "1px solid black", height: "100%" }}>
-                                    <img onClick={()=>{handleViewImage(item.itemId._id)}} style={{ height: "100%", width: "90%",cursor: "pointer" }} src={item.itemId.pic ? item.itemId.pic : "loading ... "} alt="" />
+                                    <img onClick={() => { handleViewImage(item.itemId._id) }} style={{ height: "100%", width: "90%", cursor: "pointer" }} src={item.itemId.pic ? item.itemId.pic : "loading ... "} alt="" />
                                 </Box>
                                 <Box sx={{ width: "65%", border: "1px solid black", height: "100%", display: "flex", flexDirection: "column", p: 1 }}>
                                     <Box sx={{ width: "100%", display: "flex", justifyContent: "space-between" }}>
@@ -129,7 +165,11 @@ const SideDrawer = () => {
                                         <Box sx={{ width: "50%" }}>Discount: {item.itemId.discount ? item.itemId.discount : "loading ... "}%</Box>
                                     </Box>
                                     <Box sx={{ width: "100%", display: "flex", justifyContent: "space-between" }}>
-                                        <Box sx={{ width: "50%" }}><RemoveCircleIcon fontSize='small' sx={{cursor: "pointer"}}/>   {item.quantity ? item.quantity : "loading ... "}   <AddCircleIcon fontSize='small' sx={{cursor: "pointer"}}/></Box>
+                                        <Box sx={{ width: "50%", display: "flex", gap: "1px" }}>
+                                            <div onClick={() => { handleDecreaseQuantity(item.itemId._id) }}><RemoveCircleIcon fontSize='small' sx={{ cursor: "pointer" }} /></div>
+                                            {item.quantity ? item.quantity : "loading ... "}
+                                            <div onClick={() => { handleIncreaseQuantity(item.itemId._id) }}><AddCircleIcon fontSize='small' sx={{ cursor: "pointer" }} /></div>
+                                        </Box>
                                         <Box sx={{ width: "50%" }}>Total: {item.itemId.price * item.quantity}</Box>
                                     </Box>
                                 </Box>

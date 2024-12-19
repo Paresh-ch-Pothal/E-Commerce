@@ -96,7 +96,6 @@ router.delete("/deleteItemFromCart/:itemId", fetchuser, async (req, res) => {
 // Increase and decrease the quantity of a particular item
 router.put("/increaseQuantity/:itemId", fetchuser, async (req, res) => {
     try {
-        const { nQuantity } = req.body;
         const itemId = req.params.itemId;
         const userId = req.user._id;
         const cart = await Cart.findOne({ userId: userId }).populate({
@@ -107,12 +106,12 @@ router.put("/increaseQuantity/:itemId", fetchuser, async (req, res) => {
         if (index == -1) {
             return res.status(500).json({ success: false, message: "NO item is present" })
         }
-        if (cart.items[index].itemId.stock < cart.items[index].quantity + nQuantity) {
+        if (cart.items[index].itemId.stock < cart.items[index].quantity + 1) {
             return res.status(500).json({ success: false, message: "No of quantiy exceeding the stock" })
         }
-        cart.items[index].quantity = cart.items[index].quantity + nQuantity;
-        cart.totalItems = cart.totalItems + nQuantity;
-        cart.totalPrice = cart.totalPrice + nQuantity * cart.items[index].itemId.price;
+        cart.items[index].quantity = cart.items[index].quantity + 1;
+        cart.totalItems = cart.totalItems + 1;
+        cart.totalPrice = cart.totalPrice + 1 * cart.items[index].itemId.price;
         await cart.save();
         return res.status(200).json({ success: true, cart })
     } catch (error) {
@@ -122,7 +121,6 @@ router.put("/increaseQuantity/:itemId", fetchuser, async (req, res) => {
 
 router.put("/decreaseQuantity/:itemId", fetchuser, async (req, res) => {
     try {
-        const { nQuantity } = req.body;
         const itemId = req.params.itemId;
         const userId = req.user._id;
         const cart = await Cart.findOne({ userId: userId }).populate({
@@ -133,12 +131,12 @@ router.put("/decreaseQuantity/:itemId", fetchuser, async (req, res) => {
         if (index == -1) {
             return res.status(500).json({ success: false, message: "NO item is present" })
         }
-        if (cart.items[index].quantity - nQuantity < 0) {
+        if (cart.items[index].quantity - 1 < 0) {
             return res.status(500).json({ success: false, message: "-1 quantity we donot provide" })
         }
-        cart.items[index].quantity = cart.items[index].quantity - nQuantity;
-        cart.totalItems = cart.totalItems - nQuantity;
-        cart.totalPrice = cart.totalPrice - nQuantity * cart.items[index].itemId.price;
+        cart.items[index].quantity = cart.items[index].quantity - 1;
+        cart.totalItems = cart.totalItems - 1;
+        cart.totalPrice = cart.totalPrice - 1 * cart.items[index].itemId.price;
         await cart.save();
         return res.status(200).json({ success: true, cart })
     } catch (error) {
