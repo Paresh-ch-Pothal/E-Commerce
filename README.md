@@ -1,4 +1,4 @@
-# eCommerce Platform
+# E-Commerce Platform
 
 An advanced eCommerce platform built with the **MERN stack**, offering a seamless user experience for shopping online.  
 
