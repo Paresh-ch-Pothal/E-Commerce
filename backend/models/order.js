@@ -15,14 +15,10 @@ const OrderSchema = new mongoose.Schema({
             quantity: {
                 type: Number, required: true, min: 1
             },
-            price: {
-                type: Number, required: true
-            }
         }
     ],
     totalAmount: {
         type: Number,
-        required: true,
     },
     paymentStatus: {
         type: String,
@@ -32,19 +28,18 @@ const OrderSchema = new mongoose.Schema({
     paymentMethod: {
         type: String,
         enum: ['Card', 'Net Banking', 'COD', 'Wallet'],
-        required: true
     },
     transactionId: {
         type: String,
         required: false
     },
     shippingAddress: {
-        name: { type: String, required: true },
-        phone: { type: String, required: true },
+        name: { type: String,  },
+        phone: { type: String,  },
         address: { type: String },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        country: { type: String, required: true },
+        city: { type: String,  },
+        state: { type: String,  },
+        country: { type: String,  },
     },
     orderStatus: {
         type: String,

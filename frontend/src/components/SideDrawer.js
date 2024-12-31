@@ -138,6 +138,10 @@ const SideDrawer = () => {
         }
     }
 
+    const handleOrder=()=>{
+        navigate("/orderDetails")
+    }
+
     return (
 
 
@@ -179,7 +183,7 @@ const SideDrawer = () => {
                 )}
                 <Box sx={{ textAlign: "center", mt: "3px" }}>TotalItem : {cart.totalItems ? cart.totalItems : 0}</Box>
                 <Box sx={{ textAlign: "center", mt: "3px" }}>TotalPrice : {cart.totalPrice ? cart.totalPrice : 0}</Box>
-                <Button variant="outlined">Buy Now <StoreIcon fontSize='small' style={{ marginLeft: "3px", marginTop: "3px" }} /></Button>
+                <Button onClick={handleOrder} variant="outlined">Buy Now <StoreIcon fontSize='small' style={{ marginLeft: "3px", marginTop: "3px" }} /></Button>
             </Drawer>
         </div>
     )

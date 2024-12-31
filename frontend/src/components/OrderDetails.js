@@ -1,62 +1,95 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const OrderDetails = () => {
+
+    const [cart, setcart] = useState([])
+    const [cartItem, setcartItem] = useState([])
+    const token = localStorage.getItem("token")
+    const [change, setchange] = useState(false)
+
+    const populateCart = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/cart/populateCartItems`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+            })
+
+            const data = await response.json();
+            console.log(data.cart._id)
+            console.log(data.cart.items);
+            setcart(data.cart)
+            setcartItem(data.cart.items);
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    useEffect(() => {
+        populateCart()
+    }, [token, change])
+
+    const navigate = useNavigate();
+
+    const handleInitialCheckout = async(id) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/order/InitialCheckout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'auth-token': token
+                },
+                body: JSON.stringify({cartId:id})
+            })
+            const data=await response.json();
+            console.log(data);
+            if(data.success){
+                navigate(`/checkout/${data.order._id}`)
+            }
+        } catch (error) {
+
+        }
+    }
+
+
+
     return (
         <div>
-            <section className="text-gray-400 body-font" style={{backgroundColor: "#101011"}}>
+            <section className="text-gray-400 body-font" style={{ backgroundColor: "#101011" }}>
                 <div className="container px-5 py-24 mx-auto">
+
                     <div className="flex flex-col text-center w-full mb-20">
-                        <h1 className="sm:text-4xl text-3xl font-medium title-font mb-2 text-white">Pricing</h1>
-                        <p className="lg:w-2/3 mx-auto leading-relaxed text-base">Banh mi cornhole echo park skateboard authentic crucifix neutra tilde lyft biodiesel artisan direct trade mumblecore 3 wolf moon twee</p>
+                        <h1 className="sm:text-4xl text-3xl font-medium title-font mb-2 text-white">Your Order</h1>
+                        <p className="lg:w-2/3 mx-auto leading-relaxed text-base">To decrease or increase items go to the cart and do the following operations</p>
                     </div>
                     <div className="lg:w-2/3 w-full mx-auto overflow-auto">
                         <table className="table-auto w-full text-left whitespace-no-wrap">
                             <thead>
                                 <tr>
-                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800 rounded-tl rounded-bl">Plan</th>
-                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Speed</th>
-                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Storage</th>
+                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800 rounded-tl rounded-bl">Name</th>
+                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Discount</th>
+                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Quantity</th>
                                     <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Price</th>
-                                    <th className="w-10 title-font tracking-wider font-medium text-white text-sm bg-gray-800 rounded-tr rounded-br"></th>
+                                    <th className="px-4 py-3 title-font tracking-wider font-medium text-white text-sm bg-gray-800">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td className="px-4 py-3">Start</td>
-                                    <td className="px-4 py-3">5 Mb/s</td>
-                                    <td className="px-4 py-3">15 GB</td>
-                                    <td className="px-4 py-3 text-lg text-white">Free</td>
-                                    <td className="w-10 text-center">
-                                        <input name="plan" type="radio"/>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">Pro</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">25 Mb/s</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">25 GB</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3 text-lg text-white">$24</td>
-                                    <td className="border-t-2 border-gray-800 w-10 text-center">
-                                        <input name="plan" type="radio"/>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">Business</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">36 Mb/s</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3">40 GB</td>
-                                    <td className="border-t-2 border-gray-800 px-4 py-3 text-lg text-white">$50</td>
-                                    <td className="border-t-2 border-gray-800 w-10 text-center">
-                                        <input name="plan" type="radio"/>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="border-t-2 border-b-2 border-gray-800 px-4 py-3">Exclusive</td>
-                                    <td className="border-t-2 border-b-2 border-gray-800 px-4 py-3">48 Mb/s</td>
-                                    <td className="border-t-2 border-b-2 border-gray-800 px-4 py-3">120 GB</td>
-                                    <td className="border-t-2 border-b-2 border-gray-800 px-4 py-3 text-lg text-white">$72</td>
-                                    <td className="border-t-2 border-b-2 border-gray-800 w-10 text-center">
-                                        <input name="plan" type="radio"/>
-                                    </td>
-                                </tr>
+                                {cartItem.length === 0 ? (<div>No items are present</div>) : (
+                                    cartItem.map((item) => {
+                                        return (
+                                            <tr key={item._id}>
+                                                <td className="px-4 py-3">{item.itemId.name}</td>
+                                                <td className="px-4 py-3">{item.itemId.discount}%</td>
+                                                <td className="px-4 py-3">{item.quantity}</td>
+                                                <td className="px-4 py-3 text-lg text-white">₹{item.itemId.price}</td>
+                                                <td className="px-4 py-3 text-lg text-white">₹{item.quantity * item.itemId.price}</td>
+                                            </tr>
+                                        )
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -66,7 +99,7 @@ const OrderDetails = () => {
                                 <path d="M5 12h14M12 5l7 7-7 7"></path>
                             </svg>
                         </a>
-                        <button className="flex ml-auto text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">Button</button>
+                        <button onClick={()=>{handleInitialCheckout(cart._id)}} className="flex ml-auto text-white bg-green-500 border-0 py-2 px-6 focus:outline-none hover:bg-red-600 rounded">₹{cart.totalPrice} Buy Now</button>
                     </div>
                 </div>
             </section>

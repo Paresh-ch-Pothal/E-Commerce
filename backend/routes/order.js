@@ -4,74 +4,153 @@ const Item = require("../models/item");
 const Order = require("../models/order");
 const User = require("../models/user");
 const Cart = require("../models/cart");
+const paypal = require("../routes/paypal")
 const router = express.Router()
 
-// .. without using the cart object ordered something
-router.post("/orderWithoutCart", fetchuser, async (req, res) => {
-    const { itemId, quantity, paymentMethod, transactionId, phone, address, city, state, country } = req.body
+
+
+// initial checkout
+router.post("/InitialCheckout", fetchuser, async (req, res) => {
     try {
-        const orderUser = await User.findById(req.user._id);
-        const orderItem = await Item.findById(itemId);
-        if (!orderItem) {
-            return res.status(400).json({ success: false, message: "Order item not found" });
+        const { cartId } = req.body;
+        if (!cartId) {
+            return res.status(400).json({ success: false, message: "Please provide the cartId" })
+        }
+        const cart = await Cart.findById(cartId);
+        if (!cart) {
+            return res.status(400).json({ success: false, message: "cart is not present" })
         }
         const order = await Order.create({
-            userId: req.user._id, items: [
-                { itemId: itemId, quantity, price: orderItem.price }
-            ], totalAmount: quantity * (orderItem.price),
-            paymentMethod, transactionId, shippingAddress: {
-                name: orderUser.name, phone, address, city, state, country
-            }
+            userId: req.user._id,
+            items: cart.items,
+            totalAmount: cart.totalPrice,
+            cartId: cartId
         })
-        orderUser.address = address
-        orderUser.state = state
-        orderUser.city = city
-        orderUser.country = country
-        orderUser.phone = phone
-        await orderUser.save()
         return res.status(200).json({ success: true, order });
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({ success: false, message: "Some errorm has been occured" });
+        console.log(error);
+    }
+})
+
+//final checkout
+router.post("/FinalCheckout", fetchuser, async (req, res) => {
+    try {
+        const { orderId, phone, address, city, state, country } = req.body
+        const order = await Order.findById(orderId);
+        if (req.user._id !== order.userId.toString()) {
+            return res.status(400).json({ success: false, message: "User is not same" })
+        }
+        const user = await User.findById(req.user._id);
+        user.address = address;
+        user.city = city;
+        user.state = state;
+        user.country = country;
+        await user.save();
+        order.shippingAddress = {
+            name: user.name,
+            phone: phone,
+            address: address, city: city, state: state, country: country
+        }
+        await order.save();
+        return res.status(200).json({ success: true, order })
+    } catch (error) {
+
     }
 })
 
 
-//.. order with cart object
-router.post("/orderWithCart", fetchuser, async (req, res) => {
+//creating the payment
+router.post("/create-payment", async (req, res) => {
+    const { orderId } = req.body;
+
     try {
-        const { cartId, paymentMethod, transactionId, phone, address, city, state, country } = req.body
-        const orderCart = await Cart.findById(cartId);
-        const orderUser = await User.findById(req.user._id);
-        const orderuseritem = []
-        let totalAmount = 0
-
-        for (const ele of orderCart.items) {
-            const eachitem = await Item.findById(ele.itemId);
-            if (!eachitem) {
-                return res.status(400).json({ success: false, message: `Item with ID ${ele.itemId} not found` });
-            }
-            const demo = { itemId: ele.itemId, quantity: ele.quantity, price: eachitem.price };
-            orderuseritem.push(demo);
-            totalAmount += ele.quantity * eachitem.price;
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
         }
-        const order = await Order.create({
-            userId: req.user._id, items: orderuseritem, totalAmount: totalAmount, paymentMethod, transactionId, shippingAddress: {
-                name: orderUser.name, phone, address, city, state, country
-            }, cartId: cartId
-        })
-        orderUser.address = address
-        orderUser.state = state
-        orderUser.city = city
-        orderUser.country = country
-        orderUser.phone = phone
-        await orderUser.save()
-        return res.status(200).json({ success: true, order });
 
+        const createPaymentJson = {
+            intent: "sale",
+            payer: { payment_method: "paypal" },
+            redirect_urls: {
+                return_url: `http://localhost:5000/api/order/success?orderId=${orderId}`,
+                cancel_url: `http://localhost:5000/api/order/cancel`,
+            },
+            transactions: [
+                {
+                    amount: {
+                        total: order.totalAmount,
+                        currency: "USD",
+                    },
+                    description: `Order ID: ${orderId}`,
+                },
+            ],
+        };
+
+        paypal.payment.create(createPaymentJson, (error, payment) => {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ success: false, message: "Payment creation failed" });
+            } else {
+                const approvalUrl = payment.links.find(link => link.rel === "approval_url").href;
+                return res.status(200).json({ success: true, approvalUrl });
+            }
+        });
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({ success: false, message: "Some errorm has been occured" });
+        console.error("Error creating payment:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
-})
+});
+
+// if the payment is success
+router.get("/success", async (req, res) => {
+    const { orderId } = req.query;
+
+    if (!orderId) {
+        return res.status(400).json({ success: false, message: "Missing orderId in query" });
+    }
+
+    try {
+        // Fetch the order from your database
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        // Retrieve payment details from PayPal
+        paypal.payment.get(order.transactionId, async (error, payment) => {
+            if (error) {
+                console.error("Error retrieving payment details:", error);
+                return res.status(500).json({ success: false, message: "Failed to verify payment" });
+            }
+
+            // Verify the payment details
+            if (payment.transactions[0].amount.total !== order.totalAmount.toString()) {
+                return res.status(400).json({ success: false, message: "Payment amount mismatch" });
+            }
+
+            // Update the order status
+            order.paymentStatus = "Completed";
+            order.transactionId = payment.id; // Ensure transactionId is saved during payment creation
+            await order.save();
+
+            // return res.redirect(`/order-confirmation/${orderId}`);
+            return res.status(400).json({ success: true, message: "Payment successful by user" });
+        });
+    } catch (error) {
+        console.error("Error handling payment success:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+});
+
+
+
+
+// for cancelling the order
+router.get("/cancel", async (req, res) => {
+    return res.status(400).json({ success: false, message: "Payment cancelled by user" });
+});
+
+
 
 module.exports = router

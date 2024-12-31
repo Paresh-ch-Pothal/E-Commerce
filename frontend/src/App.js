@@ -13,6 +13,7 @@ import SideDrawer from './components/SideDrawer';
 import UserOrders from './components/UserOrders';
 import SliderPage from './components/SliderPage';
 import Contact from './components/Contact';
+import CheckoutPage from './components/CheckoutPage';
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
           <Route exact path="/userorders" element={<UserOrders />} />
           <Route exact path="/sliderPage" element={<SliderPage />} />
           <Route exact path="/contact" element={<Contact />} />
+          <Route exact path="/checkout/:id" element={<CheckoutPage />} />
+
         </Routes>
         <Footer />
       </Router>
